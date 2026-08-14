@@ -6,6 +6,7 @@
   --line:#3A3A3A;
   --line-on-white:#D8D8D8;
   --accent:#B8737A;
+  --gold:#C9A24A;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -570,4 +571,356 @@ body{
   .img-block.wide{grid-column:span 2;}
   .rules-grid{grid-template-columns:1fr;}
   .masthead-inner{flex-direction:column;align-items:flex-start;}
+}
+
+/* Votive candles — full-bleed, interactive: one candle switches from a
+   resting glow to a lit glass votive cup each time a prayer is submitted */
+.votive-section{
+  padding:56px 0 60px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:34px;
+  --votive-silver:#B9BDC2;
+  --votive-silver-dim:#8B8F94;
+  --flame-core:#EEECE2;
+  --flame-mid:#B8AC86;
+  --lit-core:#F9FAF9;
+  --lit-mid:#D3D8DA;
+}
+.votive-section .section-heading{
+  padding:0 24px;
+}
+
+.votive-card{
+  position:relative;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.votive-grid{
+  display:flex;
+  flex-direction:column;
+  gap:30px;
+}
+
+.votive-row{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  width:100%;
+  padding:0 4vw;
+}
+
+.votive-candle{
+  position:relative;
+  width:20px;
+  height:42px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  transform:translateY(var(--jitter, 0px));
+}
+
+/* resting state — soft blurred glow + wick, no visible vessel */
+.votive-candle .glow{
+  position:absolute;
+  bottom:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:var(--glow-size, 24px);
+  height:var(--glow-size, 24px);
+  border-radius:50%;
+  background:radial-gradient(circle, var(--flame-core) 0%, var(--flame-mid) 26%, rgba(201,178,122,0.22) 52%, rgba(201,178,122,0) 74%);
+  filter:blur(3px);
+  animation:votive-flicker var(--pulse-duration, 3.8s) ease-in-out infinite;
+  animation-delay:var(--pulse-delay, 0s);
+  transition:opacity 1.4s ease;
+}
+
+.votive-candle .wick{
+  position:absolute;
+  bottom:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:1px;
+  height:4px;
+  background:rgba(244,239,224,0.6);
+  transition:opacity 1.4s ease;
+}
+
+@keyframes votive-flicker{
+  0%{opacity:0.5;}
+  22%{opacity:0.88;}
+  40%{opacity:0.6;}
+  58%{opacity:0.93;}
+  76%{opacity:0.56;}
+  100%{opacity:0.5;}
+}
+
+/* lit state — glass votive cup with etched cross, revealed once a
+   prayer is submitted */
+.votive-candle .cup-wrap{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 1.6s ease;
+}
+
+.votive-candle .cup-glow{
+  position:absolute;
+  left:50%;
+  bottom:6px;
+  transform:translateX(-50%);
+  width:var(--glow-size, 15px);
+  height:calc(var(--glow-size, 15px) * 1.9);
+  border-radius:50%;
+  background:radial-gradient(ellipse, var(--lit-core) 0%, var(--lit-mid) 30%, rgba(211,216,218,0.26) 58%, rgba(211,216,218,0) 78%);
+  filter:blur(2.2px);
+  animation:votive-cup-flicker var(--pulse-duration, 3.8s) ease-in-out infinite;
+  animation-delay:var(--pulse-delay, 0s);
+}
+
+.votive-candle .cup-wrap svg{
+  position:relative;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.votive-candle .cup-body,
+.votive-candle .cup-rim{
+  fill:rgba(255,255,255,0.02);
+  stroke:var(--votive-silver);
+  stroke-width:0.7;
+}
+
+.votive-candle .cup-cross{
+  stroke:var(--votive-silver-dim);
+  stroke-width:0.55;
+  stroke-linecap:round;
+}
+
+@keyframes votive-cup-flicker{
+  0%{opacity:0.55; transform:translateX(-50%) scale(0.92);}
+  24%{opacity:0.92; transform:translateX(-50%) scale(1.06);}
+  43%{opacity:0.62; transform:translateX(-50%) scale(0.96);}
+  61%{opacity:0.96; transform:translateX(-50%) scale(1.08);}
+  80%{opacity:0.58; transform:translateX(-50%) scale(0.94);}
+  100%{opacity:0.55; transform:translateX(-50%) scale(0.92);}
+}
+
+/* when a visitor makes a prayer, ONE candle at a time switches from
+   the resting glow into the lit glass-cup state */
+.votive-candle.lit .glow,
+.votive-candle.lit .wick{
+  opacity:0;
+}
+
+.votive-candle.lit .cup-wrap{
+  opacity:1;
+}
+
+.votive-candle.lit{
+  cursor:pointer;
+}
+
+/* the most recently lit candle burns brighter + whiter so it stands
+   out from candles lit earlier */
+.votive-candle.recent .cup-glow{
+  --lit-core:#FFFFFF;
+  --lit-mid:#E4EAEC;
+  width:calc(var(--glow-size, 15px) * 1.35);
+  height:calc(var(--glow-size, 15px) * 1.35 * 1.9);
+  filter:blur(2.6px) brightness(1.25);
+}
+
+.votive-candle.recent .cup-body,
+.votive-candle.recent .cup-rim{
+  stroke:#E9ECEE;
+}
+
+/* small bright cross so a lit candle visibly invites a click, to
+   reveal the prayer it was lit for */
+.votive-candle.lit .prayer-hint{
+  position:absolute;
+  top:-10px;
+  right:-3px;
+  width:9px;
+  height:9px;
+  animation:votive-hint-flicker 2.6s ease-in-out infinite;
+}
+
+.votive-candle.lit .prayer-hint::before,
+.votive-candle.lit .prayer-hint::after{
+  content:"";
+  position:absolute;
+  background:var(--gold);
+  box-shadow:0 0 4px 1px rgba(201,162,74,0.65);
+}
+
+.votive-candle.lit .prayer-hint::before{
+  left:50%;
+  top:0;
+  width:1px;
+  height:9px;
+  transform:translateX(-50%);
+}
+
+.votive-candle.lit .prayer-hint::after{
+  top:50%;
+  left:0;
+  width:9px;
+  height:1px;
+  transform:translateY(-50%);
+}
+
+.votive-candle.recent .prayer-hint::before,
+.votive-candle.recent .prayer-hint::after{
+  background:#FFFFFF;
+  box-shadow:0 0 6px 1.5px rgba(255,255,255,0.85);
+}
+
+@keyframes votive-hint-flicker{
+  0%,100%{opacity:0.75;}
+  50%{opacity:1;}
+}
+
+/* click a lit candle to see the prayer it was lit for */
+.votive-popup{
+  position:fixed;
+  max-width:240px;
+  background:#0D0D0D;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:13px;
+  line-height:1.4;
+  color:#E6E6E6;
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%, -100%) translateY(-10px);
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  z-index:20;
+  font-family:'Cormorant Garamond',serif;
+}
+
+.votive-popup.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translate(-50%, -100%) translateY(-16px);
+}
+
+.votive-popup::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-5px;
+  width:9px;
+  height:9px;
+  background:#0D0D0D;
+  border-right:1px solid rgba(255,255,255,0.15);
+  border-bottom:1px solid rgba(255,255,255,0.15);
+  transform:translateX(-50%) rotate(45deg);
+}
+
+/* marigold flowers scattered among the candles */
+.votive-marigold{
+  width:24px;
+  height:34px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  opacity:0.82;
+  animation:votive-marigold-flicker 4.8s ease-in-out infinite;
+}
+
+.votive-marigold svg{width:24px;height:24px;overflow:visible;}
+
+.votive-marigold .petal{
+  fill:none;
+  stroke:var(--gold);
+  stroke-width:0.6;
+  stroke-linecap:round;
+  opacity:0.9;
+}
+
+.votive-marigold .center{
+  fill:rgba(244,239,224,0.55);
+  stroke:var(--gold);
+  stroke-width:0.4;
+}
+
+@keyframes votive-marigold-flicker{
+  0%,100%{opacity:0.7;}
+  50%{opacity:0.95;}
+}
+
+/* prayer input */
+.votive-form{
+  width:100%;
+  max-width:480px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:0 24px;
+}
+
+.votive-input{
+  flex:1;
+  background:#060606;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  padding:12px 16px;
+  color:#DDDDDD;
+  font-size:14px;
+  font-family:inherit;
+  letter-spacing:0.02em;
+}
+
+.votive-input::placeholder{color:#666666;}
+
+.votive-input:focus{
+  outline:none;
+  border-color:var(--gold);
+}
+
+.votive-submit{
+  background:transparent;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  border-radius:10px;
+  padding:12px 22px;
+  font-size:12px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background 0.2s ease, color 0.2s ease;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.votive-submit:hover{
+  background:var(--gold);
+  color:#060606;
+}
+
+.votive-note{
+  max-width:480px;
+  width:100%;
+  text-align:center;
+  font-size:12px;
+  letter-spacing:0.08em;
+  color:var(--gold);
+  opacity:0;
+  transition:opacity 0.8s ease;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.votive-note.show{opacity:0.85;}
+
+@media (max-width:640px){
+  .votive-row{padding:0 5vw;}
+  .votive-form{padding:0 24px;}
 }

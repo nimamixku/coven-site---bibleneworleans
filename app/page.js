@@ -103,6 +103,234 @@ function AudioIndicator() {
   );
 }
 
+// ---- Votive candles ----
+// Each candle renders BOTH states stacked (resting glow + lit glass
+// cup with etched cross) — CSS crossfades between them once a prayer
+// is submitted. Layout uses a small seeded PRNG (not Math.random) so
+// server- and client-rendered markup match on hydration.
+const VOTIVE_ROWS = 4;
+const VOTIVE_ITEMS_PER_ROW = 21;
+const VOTIVE_MARIGOLDS_PER_ROW = 2;
+
+function buildVotiveLayout() {
+  let seed = 1;
+  function rand() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  }
+
+  const rows = [];
+  let candleIndex = 0;
+  for (let r = 0; r < VOTIVE_ROWS; r++) {
+    const marigoldSlots = new Set();
+    while (marigoldSlots.size < VOTIVE_MARIGOLDS_PER_ROW) {
+      const slot = 2 + Math.floor(rand() * (VOTIVE_ITEMS_PER_ROW - 4));
+      marigoldSlots.add(slot);
+    }
+
+    const items = [];
+    for (let i = 0; i < VOTIVE_ITEMS_PER_ROW; i++) {
+      if (marigoldSlots.has(i)) {
+        items.push({
+          type: "marigold",
+          key: `r${r}-i${i}`,
+          pulseDelay: `${(i * 0.4 + r) % 4}s`,
+        });
+      } else {
+        const delay = ((i * 0.37 + r * 0.6) % 4).toFixed(2);
+        const duration = (3.2 + ((i * 0.29 + r * 0.4) % 2.4)).toFixed(2);
+        const glowSize = (18 + rand() * 14).toFixed(0);
+        const jitter = (rand() * 8 - 4).toFixed(1);
+        items.push({
+          type: "candle",
+          id: `candle-${candleIndex}`,
+          key: `r${r}-i${i}`,
+          pulseDelay: `${delay}s`,
+          pulseDuration: `${duration}s`,
+          glowSize: `${glowSize}px`,
+          jitter: `${jitter}px`,
+        });
+        candleIndex++;
+      }
+    }
+    rows.push(items);
+  }
+  return rows;
+}
+
+function CupSVG() {
+  return (
+    <svg viewBox="0 0 30 54" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse className="cup-rim" cx="15" cy="6" rx="9.3" ry="2.1" />
+      <path
+        className="cup-body"
+        d="M5.7 6 L7.2 48.5 C7.5 50.8 10.8 52.5 15 52.5 C19.2 52.5 22.5 50.8 22.8 48.5 L24.3 6"
+      />
+      <line className="cup-cross" x1="15" y1="26" x2="15" y2="36" />
+      <line className="cup-cross" x1="11.5" y1="29.5" x2="18.5" y2="29.5" />
+    </svg>
+  );
+}
+
+function MarigoldSVG() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <line
+          key={i}
+          className="petal"
+          x1="12"
+          y1="12"
+          x2="12"
+          y2="2.5"
+          transform={`rotate(${(360 / 8) * i} 12 12)`}
+        />
+      ))}
+      <circle className="center" cx="12" cy="12" r="2.2" />
+    </svg>
+  );
+}
+
+function VotiveCandles() {
+  const layout = useRef(null);
+  if (!layout.current) layout.current = buildVotiveLayout();
+
+  const allCandleIds = useRef(null);
+  if (!allCandleIds.current) {
+    allCandleIds.current = layout.current
+      .flat()
+      .filter((item) => item.type === "candle")
+      .map((c) => c.id);
+  }
+
+  const [litPrayers, setLitPrayers] = useState({});
+  const [recentId, setRecentId] = useState(null);
+  const [input, setInput] = useState("");
+  const [showNote, setShowNote] = useState(false);
+  const [popup, setPopup] = useState(null);
+  const unlitPool = useRef(null);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) return;
+
+    if (!unlitPool.current || unlitPool.current.length === 0) {
+      unlitPool.current = [...allCandleIds.current];
+    }
+    const pickIndex = Math.floor(Math.random() * unlitPool.current.length);
+    const id = unlitPool.current.splice(pickIndex, 1)[0];
+
+    setLitPrayers((prev) => ({ ...prev, [id]: text }));
+    setRecentId(id);
+    setInput("");
+    setShowNote(true);
+    setPopup(null);
+  }
+
+  function handleCandleClick(id, e) {
+    const text = litPrayers[id];
+    if (!text) {
+      setPopup(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPopup({
+      text,
+      left: rect.left + rect.width / 2,
+      top: rect.top,
+    });
+  }
+
+  useEffect(() => {
+    function handleDocClick(e) {
+      if (
+        !e.target.closest(".votive-candle.lit") &&
+        !e.target.closest(".votive-popup")
+      ) {
+        setPopup(null);
+      }
+    }
+    document.addEventListener("click", handleDocClick);
+    return () => document.removeEventListener("click", handleDocClick);
+  }, []);
+
+  return (
+    <section className="votive-section">
+      <h2 className="section-heading">LIGHT A CANDLE</h2>
+
+      <div className="votive-card">
+        <div className="votive-grid">
+          {layout.current.map((row, ri) => (
+            <div className="votive-row" key={ri}>
+              {row.map((item) =>
+                item.type === "marigold" ? (
+                  <div
+                    className="votive-marigold"
+                    key={item.key}
+                    style={{ "--pulse-delay": item.pulseDelay }}
+                  >
+                    <MarigoldSVG />
+                  </div>
+                ) : (
+                  <div
+                    className={`votive-candle${
+                      litPrayers[item.id] ? " lit" : ""
+                    }${item.id === recentId ? " recent" : ""}`}
+                    key={item.key}
+                    style={{
+                      "--pulse-delay": item.pulseDelay,
+                      "--pulse-duration": item.pulseDuration,
+                      "--glow-size": item.glowSize,
+                      "--jitter": item.jitter,
+                    }}
+                    role={litPrayers[item.id] ? "button" : undefined}
+                    tabIndex={litPrayers[item.id] ? 0 : undefined}
+                    onClick={(e) => handleCandleClick(item.id, e)}
+                  >
+                    <div className="glow"></div>
+                    <div className="wick"></div>
+                    <div className="cup-wrap">
+                      <div className="cup-glow"></div>
+                      <CupSVG />
+                    </div>
+                    {litPrayers[item.id] && <div className="prayer-hint"></div>}
+                  </div>
+                )
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <form className="votive-form" onSubmit={handleSubmit}>
+        <input
+          className="votive-input"
+          type="text"
+          placeholder="make a prayer…"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button className="votive-submit" type="submit">
+          light a candle
+        </button>
+      </form>
+      <div className={`votive-note${showNote ? " show" : ""}`}>
+        your candle has been lit.
+      </div>
+
+      {popup && (
+        <div
+          className="votive-popup show"
+          style={{ left: `${popup.left}px`, top: `${popup.top}px` }}
+        >
+          {popup.text}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function PhotoStrip({ photos }) {
   const [revealed, setRevealed] = useState(false);
   const [clicked, setClicked] = useState({});
@@ -258,6 +486,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <div className="section-divider"></div>
+
+      <VotiveCandles />
 
       <div className="section-divider"></div>
 
