@@ -340,8 +340,16 @@ body{
   height:34px;
   margin:0 auto 14px;
 }
+.card-links{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin:0 auto 28px;
+}
+.card-links-sep{color:var(--line);font-size:11px;}
 .prayer-download{
-  display:block;
+  display:inline-block;
   text-align:center;
   font-family:'IBM Plex Mono',monospace;
   font-size:11px;
@@ -350,8 +358,6 @@ body{
   text-decoration:none;
   border-bottom:1px solid var(--line);
   padding-bottom:2px;
-  margin:0 auto 28px;
-  width:fit-content;
 }
 .prayer-download:hover{color:var(--white);border-color:var(--silver);}
 .prayer-body p{

@@ -152,13 +152,24 @@ export default function Home() {
                     Your browser doesn't support audio playback.
                   </audio>
                   {p.downloadCard && (
-                    <a
-                      className="prayer-download"
-                      href={`/downloads/${encodeURIComponent(p.downloadCard)}`}
-                      download
-                    >
-                      ↓ download printable prayer card
-                    </a>
+                    <div className="card-links">
+                      <a
+                        className="prayer-download"
+                        href={`/downloads/${encodeURIComponent(p.downloadCard)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        preview prayer card
+                      </a>
+                      <span className="card-links-sep">·</span>
+                      <a
+                        className="prayer-download"
+                        href={`/downloads/${encodeURIComponent(p.downloadCard)}`}
+                        download
+                      >
+                        ↓ download
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>
