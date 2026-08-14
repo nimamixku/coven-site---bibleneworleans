@@ -489,16 +489,16 @@ export default function Home() {
 
       <div className="section-divider"></div>
 
-      <VotiveCandles />
-
-      <div className="section-divider"></div>
-
       <section className="photo-strip-section">
         <h2 className="section-heading">GALLERY</h2>
         {photoSets.map((set) => (
           <PhotoStrip key={set.id} photos={set.photos} />
         ))}
       </section>
+
+      <div className="section-divider"></div>
+
+      <VotiveCandles />
 
       <div className="section-divider"></div>
 
