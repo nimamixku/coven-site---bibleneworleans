@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
+
 const rules = [
   { n: "0", text: "there is NO COVEN. there are NO rules." },
   { n: "1", text: "be someone no one can offend." },
@@ -33,6 +35,35 @@ const prayers = [
 
 function prayerAudioSrc(filename) {
   return "/audio/prayers/" + encodeURIComponent(filename);
+}
+
+// Each photo set is a horizontal strip. The closed thumbnail shows only
+// a tone-color swatch (silvertone/black/grey) — the real photo only
+// appears once someone clicks and opens the lightbox. Files live in
+// public/photos/. To add another set later: add a new entry here.
+const photoSets = [
+  {
+    id: "set-one",
+    photos: [
+      { file: "pianopeaches.jpg", tone: "#161616" },
+      { file: "strochchurch.jpg", tone: "#2a2a2a" },
+      { file: "overpass.jpg", tone: "#3d3d3d" },
+      { file: "topray.jpg", tone: "#141414" },
+      { file: "crowonline.jpg", tone: "#4e4e4e" },
+      { file: "handsholdingflowers.jpg", tone: "#232323" },
+      { file: "crosstreecemetery.jpg", tone: "#5c5c5c" },
+      { file: "bricksteps.jpg", tone: "#1c1c1c" },
+      { file: "crowflying.jpg", tone: "#6e6e6e" },
+      { file: "cross.jpg", tone: "#333333" },
+      { file: "crosswindow.jpg", tone: "#8a8a8a" },
+      { file: "palmagainstbuilding.jpg", tone: "#1a1a1a" },
+      { file: "woodencrossfranklin.jpg", tone: "#454545" },
+    ],
+  },
+];
+
+function photoSrc(filename) {
+  return "/photos/" + encodeURIComponent(filename);
 }
 
 function LineCross({ size = 22 }) {
@@ -69,6 +100,56 @@ function AudioIndicator() {
       <rect x="6" y="3" width="2" height="10" fill="currentColor" />
       <rect x="11" y="5" width="2" height="8" fill="currentColor" />
     </svg>
+  );
+}
+
+function PhotoStrip({ photos }) {
+  const [revealed, setRevealed] = useState(false);
+  const [clicked, setClicked] = useState({});
+  const stripRef = useRef(null);
+
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  function toggle(i) {
+    setClicked((c) => ({ ...c, [i]: !c[i] }));
+  }
+
+  return (
+    <div className="photo-strip" ref={stripRef}>
+      {photos.map((photo, i) => (
+        <button
+          key={i}
+          className={`photo-thumb ${revealed ? "revealed" : ""}`}
+          style={{
+            background: photo.tone,
+            "--pulse-delay": `${(i * 0.53) % 4}s`,
+            "--pulse-duration": `${3.4 + ((i * 0.31) % 2.2)}s`,
+            "--reveal-delay": `${i * 0.09}s`,
+          }}
+          onClick={() => toggle(i)}
+          aria-label={`Reveal photo ${i + 1}`}
+        >
+          {clicked[i] && (
+            <img className="photo-thumb-img" src={photoSrc(photo.file)} alt="" />
+          )}
+          <LineCross size={16} />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -180,78 +261,11 @@ export default function Home() {
 
       <div className="section-divider"></div>
 
-      <section className="collage">
-        <div className="collage-grid">
-          <div className="img-block tall">
-            <span className="img-label">cross / interior</span>
-          </div>
-          <div className="poem">
-            <p>
-              as
-              <br />
-              long
-              <br />
-              as
-              <br />
-              one
-              <br />
-              feels
-              <br />
-              that
-              <br />
-              he
-              <br />
-              is
-              <br />
-              the
-              <br />
-              doer,
-              <br />
-              he
-              <br />
-              cannot
-              <br />
-              escape
-              <br />
-              from
-              <br />
-              the
-              <br />
-              wheel
-              <br />
-              of
-              <br />
-              births
-            </p>
-            <span className="poem-attr">the buddha</span>
-          </div>
-          <div className="img-block wide">
-            <span className="img-label">cemetery cross, sky</span>
-          </div>
-          <div className="img-block">
-            <span className="img-label">altar / piano</span>
-          </div>
-          <div className="img-block">
-            <span className="img-label">prayer, shadow</span>
-          </div>
-          <div className="poem right">
-            <p>
-              to
-              <br />
-              pray,
-              <br />
-              <br />
-              in
-              <br />
-              new
-              <br />
-              orleans
-            </p>
-          </div>
-        </div>
-        <p className="collage-note">
-          photo placeholders — send real images and I'll wire them in
-        </p>
+      <section className="photo-strip-section">
+        <h2 className="section-heading">GALLERY</h2>
+        {photoSets.map((set) => (
+          <PhotoStrip key={set.id} photos={set.photos} />
+        ))}
       </section>
 
       <div className="section-divider"></div>
