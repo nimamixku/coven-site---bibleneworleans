@@ -414,42 +414,6 @@ function VerseBanner({ text, reference }) {
   const [activeKey, setActiveKey] = useState(null);
   const frozen = activeKey !== null;
 
-  // Custom cursor: a small gold cross that flickers like the votive
-  // candles, tracking the pointer via direct DOM writes (not React
-  // state) so it stays smooth and doesn't trigger re-renders on
-  // every mouse move. No-ops harmlessly on touch devices, which
-  // never fire mousemove.
-  const bannerRef = useRef(null);
-  const cursorRef = useRef(null);
-
-  useEffect(() => {
-    const el = bannerRef.current;
-    const cursorEl = cursorRef.current;
-    if (!el || !cursorEl) return;
-
-    function handleMove(e) {
-      const rect = el.getBoundingClientRect();
-      cursorEl.style.transform = `translate(${e.clientX - rect.left}px, ${
-        e.clientY - rect.top
-      }px) translate(-50%, -50%)`;
-    }
-    function show() {
-      cursorEl.classList.add("visible");
-    }
-    function hide() {
-      cursorEl.classList.remove("visible");
-    }
-
-    el.addEventListener("mousemove", handleMove);
-    el.addEventListener("mouseenter", show);
-    el.addEventListener("mouseleave", hide);
-    return () => {
-      el.removeEventListener("mousemove", handleMove);
-      el.removeEventListener("mouseenter", show);
-      el.removeEventListener("mouseleave", hide);
-    };
-  }, []);
-
   function handleTrackClick(e) {
     const wordEl = e.target.closest("[data-vb-key]");
     if (!wordEl) {
@@ -500,10 +464,7 @@ function VerseBanner({ text, reference }) {
   }
 
   return (
-    <div className={`verse-banner${frozen ? " frozen" : ""}`} ref={bannerRef}>
-      <div className="verse-banner-cursor" ref={cursorRef} aria-hidden="true">
-        <LineCross size={16} />
-      </div>
+    <div className={`verse-banner${frozen ? " frozen" : ""}`}>
       <div
         className={`verse-banner-track${frozen ? " paused" : ""}`}
         onClick={handleTrackClick}
@@ -519,9 +480,62 @@ function VerseBanner({ text, reference }) {
   );
 }
 
+// ---- Site-wide custom cursor ----
+// A small gold cross that follows the pointer everywhere on the site
+// (not just the verse banner), with its own soft flame-like glow that
+// flickers on the same rhythm as the votive candles. Tracks the mouse
+// via direct DOM writes rather than React state, so it stays smooth
+// and never triggers a re-render. Only activates on fine-pointer
+// (mouse) devices — touchscreens keep their normal behavior.
+function SiteCursor() {
+  const cursorRef = useRef(null);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !window.matchMedia ||
+      !window.matchMedia("(pointer: fine)").matches
+    ) {
+      return;
+    }
+
+    const cursorEl = cursorRef.current;
+    if (!cursorEl) return;
+
+    function handleMove(e) {
+      cursorEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+    }
+    function show() {
+      cursorEl.classList.add("visible");
+    }
+    function hide() {
+      cursorEl.classList.remove("visible");
+    }
+
+    document.body.classList.add("custom-cursor-active");
+    document.addEventListener("mousemove", handleMove);
+    document.documentElement.addEventListener("mouseenter", show);
+    document.documentElement.addEventListener("mouseleave", hide);
+    return () => {
+      document.body.classList.remove("custom-cursor-active");
+      document.removeEventListener("mousemove", handleMove);
+      document.documentElement.removeEventListener("mouseenter", show);
+      document.documentElement.removeEventListener("mouseleave", hide);
+    };
+  }, []);
+
+  return (
+    <div className="site-cursor" ref={cursorRef} aria-hidden="true">
+      <div className="site-cursor-glow"></div>
+      <LineCross size={22} />
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <div className="page">
+      <SiteCursor />
       <div className="masthead">
         <div className="masthead-inner">
           <span className="brand">
