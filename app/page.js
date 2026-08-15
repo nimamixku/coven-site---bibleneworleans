@@ -489,6 +489,7 @@ function VerseBanner({ text, reference }) {
 // (mouse) devices — touchscreens keep their normal behavior.
 function SiteCursor() {
   const cursorRef = useRef(null);
+  const glowRef = useRef(null);
 
   useEffect(() => {
     if (
@@ -500,7 +501,8 @@ function SiteCursor() {
     }
 
     const cursorEl = cursorRef.current;
-    if (!cursorEl) return;
+    const glowEl = glowRef.current;
+    if (!cursorEl || !glowEl) return;
 
     function handleMove(e) {
       cursorEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
@@ -511,22 +513,36 @@ function SiteCursor() {
     function hide() {
       cursorEl.classList.remove("visible");
     }
+    function handleClick() {
+      // Restart the flame animation even on rapid repeat clicks by
+      // removing the class, forcing a reflow, then re-adding it.
+      glowEl.classList.remove("flame");
+      void glowEl.offsetWidth;
+      glowEl.classList.add("flame");
+    }
+    function clearFlame() {
+      glowEl.classList.remove("flame");
+    }
 
     document.body.classList.add("custom-cursor-active");
     document.addEventListener("mousemove", handleMove);
+    document.addEventListener("click", handleClick);
     document.documentElement.addEventListener("mouseenter", show);
     document.documentElement.addEventListener("mouseleave", hide);
+    glowEl.addEventListener("animationend", clearFlame);
     return () => {
       document.body.classList.remove("custom-cursor-active");
       document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("click", handleClick);
       document.documentElement.removeEventListener("mouseenter", show);
       document.documentElement.removeEventListener("mouseleave", hide);
+      glowEl.removeEventListener("animationend", clearFlame);
     };
   }, []);
 
   return (
     <div className="site-cursor" ref={cursorRef} aria-hidden="true">
-      <div className="site-cursor-glow"></div>
+      <div className="site-cursor-glow" ref={glowRef}></div>
       <LineCross size={22} />
     </div>
   );
