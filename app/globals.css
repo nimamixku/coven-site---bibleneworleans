@@ -434,7 +434,7 @@ body{
   display:inline-block;
   padding:0 0.14em;
   font-family:'Cormorant Garamond',serif;
-  font-size:clamp(19px, 2.4vw, 27px);
+  font-size:clamp(15px, 1.9vw, 21px);
   text-transform:lowercase;
   letter-spacing:0.01em;
   cursor:pointer;
@@ -489,7 +489,7 @@ body{
   color:var(--silver-dim);
 }
 @media (max-width:640px){
-  .verse-banner-word{font-size:17px;}
+  .verse-banner-word{font-size:13px;}
 }
 
 /* Photo strip / gallery */
