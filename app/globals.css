@@ -399,6 +399,99 @@ body{
   color:var(--silver-dim);
 }
 
+/* Verse banner — scrolling scripture ticker in the rectangular band
+   under the prayer list. Runs edge-to-edge; each letter renders in a
+   slightly varied silvertone. Clicking a word pauses the scroll and
+   enlarges that word into thin, spaced-out caps. */
+.verse-banner{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  padding:32px 0 26px;
+  cursor:default;
+}
+.verse-banner-track{
+  display:flex;
+  width:max-content;
+  animation:verse-banner-scroll 55s linear infinite;
+  will-change:transform;
+}
+.verse-banner-track.paused{
+  animation-play-state:paused;
+}
+@keyframes verse-banner-scroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+.verse-banner-line{
+  display:flex;
+  align-items:baseline;
+  flex-shrink:0;
+  padding-right:5vw;
+}
+.verse-banner-word{
+  position:relative;
+  display:inline-block;
+  padding:0 0.14em;
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(19px, 2.4vw, 27px);
+  text-transform:lowercase;
+  letter-spacing:0.01em;
+  cursor:pointer;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1), letter-spacing .45s ease, font-weight .35s ease;
+  transform-origin:center bottom;
+}
+.verse-banner-word:hover:not(.active){filter:brightness(1.2);}
+.verse-banner-word.active{
+  text-transform:uppercase;
+  transform:scale(1.28);
+  font-weight:300;
+  letter-spacing:0.09em;
+  z-index:2;
+}
+.verse-banner-word.active .verse-banner-letter{
+  color:var(--white) !important;
+  text-shadow:0 0 16px rgba(255,255,255,0.35), 0 0 1px rgba(255,255,255,0.5);
+}
+.verse-banner.frozen .verse-banner-word:not(.active){
+  opacity:0.32;
+  transition:opacity .5s ease;
+}
+.verse-banner:not(.frozen) .verse-banner-word{
+  opacity:1;
+  transition:opacity .5s ease;
+}
+.verse-banner-divider{
+  display:inline-flex;
+  align-items:center;
+  margin:0 2.4em;
+  color:var(--silver-dim);
+  flex-shrink:0;
+}
+.verse-banner-hint{
+  margin-top:16px;
+  text-align:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--silver-dim);
+  opacity:0;
+  transition:opacity .5s ease;
+}
+.verse-banner-hint.show{ opacity:0.85; }
+.verse-banner-citation{
+  margin-top:14px;
+  text-align:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.08em;
+  color:var(--silver-dim);
+}
+@media (max-width:640px){
+  .verse-banner-word{font-size:17px;}
+}
+
 /* Photo strip / gallery */
 .photo-strip-section{
   padding:50px 0 60px;

@@ -381,6 +381,105 @@ function PhotoStrip({ photos }) {
   );
 }
 
+// ---- Verse banner ----
+// A scrolling ticker of scripture in the rectangular band under the
+// prayer list. All-lowercase, silvertone letters with slight per-letter
+// tone variation. Clicking a word pauses the scroll and enlarges that
+// word into thin, spaced-out caps; clicking again (or the empty strip)
+// resumes. Since the words are scripture, not the user's own writing,
+// the reference is credited underneath.
+const VERSE_PRAYER = {
+  text: "and the angel came in unto her, and said, hail, thou that art highly favoured, the lord is with thee: blessed art thou among women.",
+  reference: "luke 1:28, king james version",
+};
+
+// Deterministic (not Math.random), same trick as buildVotiveLayout above,
+// so server- and client-rendered letter tones match on hydration.
+function seededUnit(n) {
+  const x = Math.sin(n * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function silverTone(seed) {
+  const base = 74; // roughly --silver's lightness
+  const spread = 16;
+  const l = base + (seededUnit(seed) - 0.5) * spread;
+  return `hsl(0, 0%, ${Math.max(58, Math.min(92, l)).toFixed(1)}%)`;
+}
+
+const VERSE_BANNER_REPEATS = 3;
+
+function VerseBanner({ text, reference }) {
+  const [words] = useState(() => text.split(" "));
+  const [activeKey, setActiveKey] = useState(null);
+  const frozen = activeKey !== null;
+
+  function handleTrackClick(e) {
+    const wordEl = e.target.closest("[data-vb-key]");
+    if (!wordEl) {
+      setActiveKey(null);
+      return;
+    }
+    const key = wordEl.dataset.vbKey;
+    setActiveKey((prev) => (prev === key ? null : key));
+  }
+
+  let letterSeed = 0;
+  function renderHalf(halfIndex) {
+    const groups = [];
+    for (let r = 0; r < VERSE_BANNER_REPEATS; r++) {
+      groups.push(
+        <span className="verse-banner-line" key={`h${halfIndex}-r${r}`}>
+          {words.map((w, i) => {
+            const key = `h${halfIndex}-r${r}-w${i}`;
+            return (
+              <span
+                className={`verse-banner-word${
+                  activeKey === key ? " active" : ""
+                }`}
+                data-vb-key={key}
+                key={key}
+              >
+                {[...w].map((ch, ci) => (
+                  <span
+                    className="verse-banner-letter"
+                    style={{ color: silverTone(letterSeed++) }}
+                    key={ci}
+                  >
+                    {ch}
+                  </span>
+                ))}
+              </span>
+            );
+          })}
+        </span>
+      );
+      groups.push(
+        <span className="verse-banner-divider" key={`h${halfIndex}-r${r}-d`}>
+          <LineCross size={14} />
+        </span>
+      );
+    }
+    return groups;
+  }
+
+  return (
+    <div className={`verse-banner${frozen ? " frozen" : ""}`}>
+      <div
+        className={`verse-banner-track${frozen ? " paused" : ""}`}
+        onClick={handleTrackClick}
+      >
+        {renderHalf(0)}
+        {renderHalf(1)}
+      </div>
+      <div className={`verse-banner-hint${frozen ? " show" : ""}`}>
+        tap again to continue
+      </div>
+      <div className="verse-banner-citation">{reference}</div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <div className="page">
@@ -495,6 +594,13 @@ export default function Home() {
           <PhotoStrip key={set.id} photos={set.photos} />
         ))}
       </section>
+
+      <div className="section-divider"></div>
+
+      <VerseBanner
+        text={VERSE_PRAYER.text}
+        reference={VERSE_PRAYER.reference}
+      />
 
       <div className="section-divider"></div>
 
