@@ -408,7 +408,39 @@ body{
   width:100%;
   overflow:hidden;
   padding:32px 0 26px;
-  cursor:default;
+  cursor:none;
+}
+/* custom gold cross, replaces the native cursor while hovering the
+   banner; flickers like the votive candle flames */
+.verse-banner-cursor{
+  position:absolute;
+  top:0;
+  left:0;
+  width:16px;
+  height:16px;
+  color:var(--gold);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+  z-index:10;
+  will-change:transform;
+}
+.verse-banner-cursor.visible{
+  opacity:1;
+}
+.verse-banner-cursor svg{
+  display:block;
+  width:100%;
+  height:100%;
+  filter:drop-shadow(0 0 4px rgba(201,162,74,0.6));
+  animation:verse-banner-cursor-flicker 2.6s ease-in-out infinite;
+}
+@keyframes verse-banner-cursor-flicker{
+  0%,100%{opacity:0.7;}
+  22%{opacity:0.95;}
+  40%{opacity:0.75;}
+  58%{opacity:1;}
+  76%{opacity:0.72;}
 }
 .verse-banner-track{
   display:flex;
@@ -437,14 +469,14 @@ body{
   font-size:clamp(15px, 1.9vw, 21px);
   text-transform:lowercase;
   letter-spacing:0.01em;
-  cursor:pointer;
+  cursor:none;
   transition:transform .45s cubic-bezier(.2,.8,.2,1), letter-spacing .45s ease, font-weight .35s ease;
   transform-origin:center bottom;
 }
 .verse-banner-word:hover:not(.active){filter:brightness(1.2);}
 .verse-banner-word.active{
   text-transform:uppercase;
-  transform:scale(1.28);
+  transform:scale(1.18);
   font-weight:300;
   letter-spacing:0.09em;
   z-index:2;
