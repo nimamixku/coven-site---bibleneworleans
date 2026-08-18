@@ -233,7 +233,7 @@ body{
 
 /* Prayer and Meditation */
 .prayer-section{
-  padding:70px 0;
+  padding:70px 0 20px;
 }
 .prayer-list{
   width:100%;
@@ -551,7 +551,7 @@ body.custom-cursor-active *{
 
 /* Photo strip / gallery */
 .photo-strip-section{
-  padding:50px 0 60px;
+  padding:20px 0 60px;
 }
 .photo-strip-section .section-heading{
   padding:0 24px;
@@ -1017,6 +1017,7 @@ body.custom-cursor-active *{
   gap:10px;
   align-items:center;
   padding:0 24px;
+  margin-top:24px;
 }
 
 .votive-input{
