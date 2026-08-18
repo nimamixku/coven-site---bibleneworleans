@@ -696,8 +696,9 @@ body.custom-cursor-active *{
 .lightbox-autoplay:hover{color:var(--white);border-color:var(--silver);}
 
 @media (max-width:640px){
-  .photo-strip{flex-wrap:wrap;height:auto;max-height:none;}
-  .photo-thumb{flex:1 1 25%;height:0;padding-bottom:25%;}
+  /* Keep it one strip, same as desktop — thumbnails just get narrower
+     rather than wrapping into a multi-row grid. min-height:80px on the
+     base .photo-strip rule already keeps the row from getting too thin. */
   .lightbox-frame{width:min(80vw, 340px);}
 }
 
