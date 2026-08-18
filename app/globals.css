@@ -1071,6 +1071,11 @@ body.custom-cursor-active *{
 .votive-note.show{opacity:0.85;}
 
 @media (max-width:640px){
-  .votive-row{padding:0 5vw;}
+  .votive-row{padding:0 6vw;}
+  /* Same fixed-width candles, same space-between layout — just fewer of
+     them per row so the gaps stay generous instead of cramming all 19-21
+     onto a narrow screen. Hiding every other slot (candle or marigold)
+     roughly halves the count while keeping the row's own random mix. */
+  .votive-row > *:nth-child(even){display:none;}
   .votive-form{padding:0 24px;}
 }
