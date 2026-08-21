@@ -7,6 +7,7 @@
   --line-on-white:#D8D8D8;
   --accent:#B8737A;
   --gold:#C9A24A;
+  --tile-gold:#E6D8AE; /* whitish gold for OUI OUI tile letters, paler than the sitewide --gold */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -268,8 +269,8 @@ body{
   position:absolute;
   left:50%;
   top:50%;
-  width:40px;
-  height:40px;
+  width:50px;
+  height:50px;
   border-radius:50%;
   background:radial-gradient(circle, #FFFFFF 0%, #F1F2F0 35%, rgba(255,255,255,0.35) 60%, rgba(255,255,255,0) 78%);
   filter:blur(3px);
@@ -293,10 +294,6 @@ body{
   width:100%;
   justify-content:center;
   gap:2px;
-  background:#050505;
-  border:1px solid var(--line);
-  padding:12px;
-  border-radius:2px;
 }
 .signboard-tile{
   position:relative;

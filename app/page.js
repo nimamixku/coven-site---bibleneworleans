@@ -348,7 +348,7 @@ const OUI_OUI_TILE_ASPECT = 0.88; // width:height of one tile — near-square, l
 const OUI_OUI_COLOR_CHIP_CHANCE = 0.16; // fraction of spinning tiles showing a solid color chip at any moment, rest show scrambling grey letters
 const OUI_OUI_TILE_MIN = 22;
 const OUI_OUI_TILE_MAX = 92;
-const OUI_OUI_BEZEL = 12 * 2 + 1 * 2; // .signboard padding + border, both sides
+const OUI_OUI_BEZEL = 0; // no frame around the tiles anymore, so no space to reserve
 const OUI_OUI_GAP = 2;
 const OUI_OUI_DESIRED_TILE_W = 58; // comfortable baseline module width
 const OUI_OUI_FLIP_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -534,8 +534,8 @@ function OuiOuiBoard() {
         />
         <svg
           className="signboard-cross"
-          width="16"
-          height="22"
+          width="22"
+          height="30"
           viewBox="0 0 22 30"
           fill="none"
         >
@@ -597,7 +597,7 @@ function OuiOuiBoard() {
                 content = (
                   <span
                     className="signboard-char"
-                    style={{ fontSize: Math.round(tileW * 0.46), color: "var(--gold)" }}
+                    style={{ fontSize: Math.round(tileW * 0.46), color: "var(--tile-gold)" }}
                   >
                     {targetChar}
                   </span>
