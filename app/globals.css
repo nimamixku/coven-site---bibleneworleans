@@ -231,6 +231,107 @@ body{
 }
 .covenism-line:last-child{border-bottom:none;}
 
+/* OUI OUI — a wide split-flap reader-board, design-inspired by the
+   marquee sign at Carrollton United Methodist Church (credited in
+   .signboard-caption below it). Full page width, like the candle row
+   above it: the phrase's own column/row count comes from how many
+   comfortable-sized tiles fit that width, not from chasing a square
+   shape. Click the cross — it lights up with the same flame flash as
+   the site's custom cursor — and the board scrambles through letters
+   (with a scattering of solid color-chip tiles, like a real split-flap
+   board's spare "color" characters) before settling, tile by tile,
+   into a line pulled verbatim from COVENISMS / COVEN TALK below. */
+.signboard-section{
+  width:100%;
+  margin:0;
+  padding:20px 4vw 40px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.signboard-cross-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+  padding:14px;
+}
+.signboard-cross{
+  color:var(--silver-dim);
+  position:relative;
+  z-index:1;
+  transition:color 0.2s ease;
+}
+.signboard-cross-wrap:hover .signboard-cross{color:var(--gold);}
+.signboard-cross-glow{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:radial-gradient(circle, #FFFFFF 0%, #F1F2F0 35%, rgba(255,255,255,0.35) 60%, rgba(255,255,255,0) 78%);
+  filter:blur(3px);
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0.5);
+  pointer-events:none;
+}
+.signboard-cross-glow.flame{
+  animation:signboardCrossFlame 0.65s ease-out;
+}
+@keyframes signboardCrossFlame{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(0.45); }
+  18%{ opacity:0.9; transform:translate(-50%,-50%) scale(1.05); }
+  45%{ opacity:0.65; transform:translate(-50%,-50%) scale(0.85); }
+  100%{ opacity:0; transform:translate(-50%,-50%) scale(0.55); }
+}
+.signboard-frame{ position:relative; padding-top:6px; width:100%; }
+.signboard{
+  position:relative;
+  display:grid;
+  width:100%;
+  justify-content:center;
+  gap:2px;
+  background:#050505;
+  border:1px solid var(--line);
+  padding:12px;
+  border-radius:2px;
+}
+.signboard-tile{
+  position:relative;
+  border-radius:0;
+  background-color:#141413;
+  border:1px solid #000;
+  background-image:linear-gradient(to bottom, rgba(255,255,255,0.08) 0 48%, rgba(0,0,0,0.55) 48% 52%, rgba(0,0,0,0.12) 52% 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.signboard-char{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:300;
+  letter-spacing:0.02em;
+  line-height:1;
+}
+.signboard-hint{
+  margin-top:16px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:0.06em;
+  color:var(--silver-dim);
+  text-align:center;
+}
+.signboard-caption{
+  margin-top:6px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--silver-dim);
+  text-align:center;
+  opacity:0.75;
+}
+
 /* Prayer and Meditation */
 .prayer-section{
   padding:70px 0 20px;

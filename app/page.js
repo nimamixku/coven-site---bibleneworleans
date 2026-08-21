@@ -331,6 +331,301 @@ function VotiveCandles() {
   );
 }
 
+// ---- OUI OUI ----
+// A wide split-flap reader-board, styled after the marquee sign at
+// Carrollton United Methodist Church (credited in the caption below it) —
+// and after real split-flap boards generally (that mechanism predates any
+// one product; Vestaboard is just a modern take on the same idea). Tiles
+// are LETTERS (one per module, not a sub-pixel), sized so the whole board
+// reads as wide as the page — like the candle row above it — rather than
+// forcing a square shape. Click the cross (it lights up with the same
+// flame flash as the site's custom cursor) and the board scrambles
+// through letters, with a scattering of solid color-chip tiles, before
+// settling — left to right, weighted slightly by row — into a line
+// pulled verbatim from the coven's own vocabulary (the same words as
+// COVENISMS / COVEN TALK below). Plays once it scrolls into view.
+const OUI_OUI_TILE_ASPECT = 0.88; // width:height of one tile — near-square, like a real split-flap module
+const OUI_OUI_COLOR_CHIP_CHANCE = 0.16; // fraction of spinning tiles showing a solid color chip at any moment, rest show scrambling grey letters
+const OUI_OUI_TILE_MIN = 22;
+const OUI_OUI_TILE_MAX = 92;
+const OUI_OUI_BEZEL = 12 * 2 + 1 * 2; // .signboard padding + border, both sides
+const OUI_OUI_GAP = 2;
+const OUI_OUI_DESIRED_TILE_W = 58; // comfortable baseline module width
+const OUI_OUI_FLIP_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// Exact colors sampled directly from the bibleneworleans.com word-cloud
+// (BIBLE, REVELATIONS, MATRIX, PAGES, 100 VIDEOS, INDIAN SUIT, GLOSSARY,
+// CREOLE/KAQCHIKEL, ME, GARDEN, DIGITAL GALLERY, in that order).
+const OUI_OUI_COLORS = [
+  "#D85052",
+  "#CD5F79",
+  "#C1302F",
+  "#AC397B",
+  "#E459C6",
+  "#572D81",
+  "#BF90B7",
+  "#438A87",
+  "#F4C544",
+  "#3F7939",
+  "#5899E2",
+];
+// Verbatim lines pulled from `rules` and the COVEN TALK strip below —
+// nothing new written here, just re-staged for the board.
+const OUI_OUI_PHRASES = [
+  "THERE IS NO COVEN THERE ARE NO RULES",
+  "BE SOMEONE NO ONE CAN OFFEND",
+  "YOU ARE GOD NOT YOUR AVATAR",
+  "YOUR BRAIN IS DUMB STOP LISTENING TO IT",
+  "YOUR WORDS CAST SPELLS",
+  "YOURS IS THE WORD OF GOD",
+  "EVERYTHING IS PLACEBO UNTIL YOU HIT GOD MODE",
+  "YOUR BRAIN LISTENS TO YOU NOT VICE VERSA",
+  "THE COVEN DOESN'T EXIST",
+];
+const OUI_OUI_FLIP_DURATION_MS = 2000;
+const OUI_OUI_TICK_MS = 55;
+const OUI_OUI_TOTAL_TICKS = Math.round(
+  OUI_OUI_FLIP_DURATION_MS / OUI_OUI_TICK_MS
+);
+
+function ouiOuiWrapAt(text, targetW) {
+  const words = text.split(" ");
+  const lines = [];
+  let cur = "";
+  words.forEach((w) => {
+    const candidate = cur ? cur + " " + w : w;
+    if (candidate.length > targetW && cur) {
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = candidate;
+    }
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+// A real reader-board is a WIDE, short rectangle: its column count comes
+// from the board's fixed physical width, not from chasing a square shape.
+// Figure out how many comfortable-sized tiles fit across the section's
+// actual width, wrap the phrase to that column count, and let the row
+// count fall out naturally (usually just 1-2 rows).
+function ouiOuiComputeLayout(text, sectionWidth) {
+  const availTotal = Math.max(320, sectionWidth || 560);
+  const avail = Math.max(200, availTotal - OUI_OUI_BEZEL);
+  let cols = Math.max(
+    5,
+    Math.round((avail + OUI_OUI_GAP) / (OUI_OUI_DESIRED_TILE_W + OUI_OUI_GAP))
+  );
+  const lines = ouiOuiWrapAt(text, cols);
+  // Use the ACTUAL widest line, not the trial width — a single word longer
+  // than `cols` can't be split, so the real line can run wider than
+  // intended. Sizing cols off the trial width alone would silently
+  // truncate long words (e.g. "EVERYTHING" cut to "EVERYTH").
+  cols = Math.max(cols, ...lines.map((l) => l.length));
+  const tileW = Math.max(
+    OUI_OUI_TILE_MIN,
+    Math.min(OUI_OUI_TILE_MAX, (avail - (cols - 1) * OUI_OUI_GAP) / cols)
+  );
+  return { lines, cols, tileW };
+}
+
+// Center every line within `cols`, padding with spaces (blank/unlit
+// tiles) — same convention as a real reader-board holding unused modules
+// dark.
+function ouiOuiLayoutGrid(lines, cols) {
+  return lines.map((line) => {
+    const pad = Math.max(0, cols - line.length);
+    const left = Math.floor(pad / 2);
+    const row = [];
+    for (let c = 0; c < cols; c++) {
+      const i = c - left;
+      row.push(i >= 0 && i < line.length ? line[i] : " ");
+    }
+    return row;
+  });
+}
+
+function ouiOuiRandChar() {
+  return OUI_OUI_FLIP_CHARS[
+    Math.floor(Math.random() * OUI_OUI_FLIP_CHARS.length)
+  ];
+}
+function ouiOuiRandColor() {
+  return OUI_OUI_COLORS[Math.floor(Math.random() * OUI_OUI_COLORS.length)];
+}
+
+function OuiOuiBoard() {
+  const sectionRef = useRef(null);
+  const [width, setWidth] = useState(560);
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [tick, setTick] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [flame, setFlame] = useState(false);
+
+  useEffect(() => {
+    function measure() {
+      if (sectionRef.current) setWidth(sectionRef.current.clientWidth);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  function askAgain() {
+    if (running) return;
+    setFlame(true);
+    let next = Math.floor(Math.random() * OUI_OUI_PHRASES.length);
+    if (OUI_OUI_PHRASES.length > 1 && next === msgIndex) {
+      next = (next + 1) % OUI_OUI_PHRASES.length;
+    }
+    setMsgIndex(next);
+    setStarted(true);
+    setRunning(true);
+    setTick(0);
+  }
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          askAgain();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!running) return;
+    if (tick >= OUI_OUI_TOTAL_TICKS) {
+      setRunning(false);
+      return;
+    }
+    const id = setTimeout(() => setTick((t) => t + 1), OUI_OUI_TICK_MS);
+    return () => clearTimeout(id);
+  }, [running, tick]);
+
+  const layout = ouiOuiComputeLayout(OUI_OUI_PHRASES[msgIndex], width);
+  const cols = layout.cols;
+  const tileW = layout.tileW;
+  const tileH = tileW / OUI_OUI_TILE_ASPECT;
+  const grid = ouiOuiLayoutGrid(layout.lines, cols);
+  const rows = grid.length;
+
+  return (
+    <section className="signboard-section" ref={sectionRef}>
+      <h2 className="section-heading">OUI OUI</h2>
+      <div
+        className="signboard-cross-wrap"
+        onClick={askAgain}
+        role="button"
+        aria-label="Flip the sign board to a new line"
+      >
+        <div
+          className={`signboard-cross-glow${flame ? " flame" : ""}`}
+          onAnimationEnd={() => setFlame(false)}
+        />
+        <svg
+          className="signboard-cross"
+          width="16"
+          height="22"
+          viewBox="0 0 22 30"
+          fill="none"
+        >
+          <line
+            x1="11"
+            y1="1"
+            x2="11"
+            y2="29"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <line
+            x1="1"
+            y1="9"
+            x2="21"
+            y2="9"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+        </svg>
+      </div>
+
+      <div className="signboard-frame">
+        <div
+          className="signboard"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, ${tileW}px)`,
+            gridAutoRows: `${tileH}px`,
+          }}
+        >
+          {grid.map((row, r) =>
+            row.map((targetChar, c) => {
+              const isBlank = targetChar === " ";
+              const s = (c / cols) * 0.7 + (r / rows) * 0.3; // 0..1 wave weighted horizontally
+              const settleTick = Math.round(s * OUI_OUI_TOTAL_TICKS);
+              const isSettled = !started || !running || tick >= settleTick;
+              const spinning = started && running && !isSettled && !isBlank;
+
+              let content = null;
+              const tileStyle = {};
+              if (spinning) {
+                // Like a real split-flap module: most tiles are still
+                // cycling through legible grey letters, and only a
+                // scattering of tiles land on a solid color chip at any
+                // instant (not the whole board flashing color at once).
+                if (Math.random() < OUI_OUI_COLOR_CHIP_CHANCE) {
+                  tileStyle.backgroundColor = ouiOuiRandColor();
+                } else {
+                  content = (
+                    <span
+                      className="signboard-char"
+                      style={{ fontSize: Math.round(tileW * 0.46), color: "#9a9a96" }}
+                    >
+                      {ouiOuiRandChar()}
+                    </span>
+                  );
+                }
+              } else if (!isBlank && started) {
+                content = (
+                  <span
+                    className="signboard-char"
+                    style={{ fontSize: Math.round(tileW * 0.46), color: "var(--gold)" }}
+                  >
+                    {targetChar}
+                  </span>
+                );
+              }
+
+              return (
+                <div
+                  className="signboard-tile"
+                  style={tileStyle}
+                  key={r + "-" + c}
+                >
+                  {content}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <p className="signboard-hint">click the cross to ask again</p>
+      <p className="signboard-caption">
+        design inspiration: the split-flap marquee sign at Carrollton United
+        Methodist Church
+      </p>
+    </section>
+  );
+}
 function PhotoStrip({ photos }) {
   const [revealed, setRevealed] = useState(false);
   const [clicked, setClicked] = useState({});
@@ -674,6 +969,10 @@ export default function Home() {
       <div className="section-divider"></div>
 
       <VotiveCandles />
+
+      <div className="section-divider"></div>
+
+      <OuiOuiBoard />
 
       <div className="section-divider"></div>
 
