@@ -7,7 +7,7 @@
   --line-on-white:#D8D8D8;
   --accent:#B8737A;
   --gold:#C9A24A;
-  --tile-gold:#E6D8AE; /* whitish gold for OUI OUI tile letters, paler than the sitewide --gold */
+  --tile-gold:#D2B268; /* warm gold for OUI OUI tile letters, close to --gold with a touch of lift */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -294,6 +294,8 @@ body{
   width:100%;
   justify-content:center;
   gap:2px;
+  border:1px solid rgba(200,196,190,0.09);
+  padding:12px;
 }
 .signboard-tile{
   position:relative;
