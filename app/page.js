@@ -857,14 +857,33 @@ function SiteCursor() {
 // The booth's own illustrated sign -- an original line-art piece in the
 // site's existing gold/silver aesthetic (not a copy of the Peanuts booth
 // art), showing the REAL dollar cost of the last reading instead of a
-// joke "5 cents". Before any question's been asked it just shows a dash.
-function BoothSignGraphic({ price, asking }) {
-  const priceLabel =
-    price == null ? "— . — — — —" : `$${price.toFixed(4)}`;
+// joke "5 cents" -- before any question's been asked it just shows a
+// dash. When a fresh price comes in, its digits spin through random
+// numbers and land on the real value in sequence, left to right -- like
+// a cash register ringing up a sale -- rather than just popping into
+// place.
+const PRICE_TICK_MS = 55;
+const PRICE_TOTAL_TICKS = 14;
+
+function priceRandDigit() {
+  return String(Math.floor(Math.random() * 10));
+}
+
+function BoothSignGraphic({ price, animating, tick }) {
+  const hasPrice = price != null;
+  let whole = "0";
+  let fracDigits = [];
+  if (hasPrice) {
+    const fixed = price.toFixed(4);
+    const parts = fixed.split(".");
+    whole = parts[0];
+    fracDigits = parts[1].split("");
+  }
+
   return (
     <svg
       className="booth-sign"
-      viewBox="0 0 220 116"
+      viewBox="0 0 220 90"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
@@ -872,22 +891,51 @@ function BoothSignGraphic({ price, asking }) {
         x="1"
         y="1"
         width="218"
-        height="114"
+        height="88"
+        rx="4"
         fill="none"
         stroke="currentColor"
         strokeWidth="1"
       />
-      <line x1="1" y1="40" x2="219" y2="40" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-      <line x1="1" y1="86" x2="219" y2="86" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+      <line x1="1" y1="42" x2="219" y2="42" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
       <text x="110" y="26" textAnchor="middle" className="booth-sign-title">
         BOOTH HELP
       </text>
       <text x="110" y="70" textAnchor="middle" className="booth-sign-price">
-        {priceLabel}
+        {hasPrice ? (
+          <>
+            <tspan>{"$" + whole + "."}</tspan>
+            {fracDigits.map((d, i) => {
+              const settleTick = Math.round(
+                ((i + 1) / fracDigits.length) * PRICE_TOTAL_TICKS
+              );
+              const spinning = animating && tick < settleTick;
+              return <tspan key={i}>{spinning ? priceRandDigit() : d}</tspan>;
+            })}
+          </>
+        ) : (
+          "— . — — — —"
+        )}
       </text>
-      <text x="110" y="102" textAnchor="middle" className="booth-sign-sub">
-        {asking ? "reading…" : "the booth is in"}
-      </text>
+    </svg>
+  );
+}
+
+// A small line-art stool, set off to the side of the booth frame -- the
+// same nod as the stool next to the real "psychiatric help" booth. Just
+// a seat and three legs, in the site's thin line-art style.
+function BoothStool() {
+  return (
+    <svg
+      className="booth-stool"
+      viewBox="0 0 40 40"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <ellipse cx="20" cy="9" rx="14" ry="4.5" fill="none" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="9" y1="11" x2="4" y2="38" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="31" y1="11" x2="36" y2="38" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="20" y1="13" x2="20" y2="38" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   );
 }
@@ -958,6 +1006,9 @@ function Booth() {
   const [entry, setEntry] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState("");
+  const [priceTick, setPriceTick] = useState(0);
+  const [priceAnimating, setPriceAnimating] = useState(false);
+  const lastEntryId = useRef(null);
 
   useEffect(() => {
     fetch("/api/owner")
@@ -965,6 +1016,26 @@ function Booth() {
       .then((d) => setIsOwner(!!d.isOwner))
       .catch(() => {});
   }, []);
+
+  // Every new answer rings up its own real price on the sign -- the
+  // digits spin through random numbers and settle left to right, like a
+  // cash register ringing up a sale.
+  useEffect(() => {
+    if (!entry || entry.id === lastEntryId.current) return;
+    lastEntryId.current = entry.id;
+    setPriceTick(0);
+    setPriceAnimating(true);
+  }, [entry]);
+
+  useEffect(() => {
+    if (!priceAnimating) return;
+    if (priceTick >= PRICE_TOTAL_TICKS) {
+      setPriceAnimating(false);
+      return;
+    }
+    const id = setTimeout(() => setPriceTick((t) => t + 1), PRICE_TICK_MS);
+    return () => clearTimeout(id);
+  }, [priceAnimating, priceTick]);
 
   function handleAsk(e) {
     e.preventDefault();
@@ -998,20 +1069,43 @@ function Booth() {
       </p>
 
       <div className="booth-card">
-        <BoothSignGraphic price={entry?.costUsd} asking={asking} />
+        <BoothSignGraphic
+          price={entry?.costUsd}
+          animating={priceAnimating}
+          tick={priceTick}
+        />
 
-        <div className="booth-window">
-          {asking ? (
-            <div className="booth-placeholder booth-thinking">
-              <LineCross size={28} />
-            </div>
-          ) : entry ? (
-            <p className="booth-answer">{entry.answer}</p>
-          ) : (
-            <div className="booth-placeholder">
-              <LineCross size={28} />
-            </div>
-          )}
+        {/* the booth's body: a window opening (where the answer appears)
+            over a counter with its own status placard -- same shape as
+            the real gag, redrawn in the site's own line-art voice, with
+            a little stool set off to the side. */}
+        <div className="booth-frame">
+          <div className="booth-window">
+            {asking ? (
+              <div className="booth-placeholder booth-thinking">
+                <LineCross size={28} />
+              </div>
+            ) : entry ? (
+              <p className="booth-answer">{entry.answer}</p>
+            ) : (
+              <div className="booth-placeholder">
+                <LineCross size={28} />
+              </div>
+            )}
+          </div>
+
+          <div className="booth-frame-divider"></div>
+          <div className="booth-counter-label">
+            {asking ? (
+              "reading…"
+            ) : (
+              <>
+                the booth is <span className="booth-counter-boxed">in</span>
+              </>
+            )}
+          </div>
+
+          <BoothStool />
         </div>
 
         <form className="booth-form" onSubmit={handleAsk}>

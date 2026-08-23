@@ -359,10 +359,51 @@ body{
 }
 .booth-sign{
   width:100%;
-  max-width:300px;
+  max-width:280px;
   height:auto;
   color:var(--silver-dim);
   margin-bottom:20px;
+}
+/* the booth's body: window opening on top of a counter, with a little
+   stool set off to the side -- same shape as the real gag, redrawn in
+   the site's own line-art voice rather than copying its artwork. */
+.booth-frame{
+  position:relative;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  margin-bottom:24px;
+}
+.booth-frame-divider{
+  width:100%;
+  height:1px;
+  background:rgba(255,255,255,0.14);
+  margin:14px 0 10px;
+}
+.booth-counter-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.06em;
+  color:var(--silver-dim);
+  text-align:left;
+  padding-left:2px;
+}
+.booth-counter-boxed{
+  display:inline-block;
+  border:1px solid var(--silver-dim);
+  border-radius:3px;
+  padding:0 6px;
+  margin-left:3px;
+  color:var(--silver);
+}
+.booth-stool{
+  position:absolute;
+  right:-14px;
+  bottom:-4px;
+  width:30px;
+  height:auto;
+  color:var(--silver-dim);
+  opacity:0.85;
 }
 .booth-sign-title{
   font-family:'IBM Plex Mono',monospace;
@@ -378,22 +419,43 @@ body{
 }
 .booth-sign-sub{
   font-family:'IBM Plex Mono',monospace;
-  font-size:9.5px;
-  letter-spacing:0.08em;
+  font-size:8.5px;
+  letter-spacing:0.05em;
   fill:var(--silver-dim);
   opacity:0.75;
 }
+/* the answer arrives as an actual text-message bubble -- rounded on
+   three corners, sharp+tailed on the fourth, hugging its own content
+   width and sitting off to one side like a received text, rather than
+   stretching the full card width like a plain panel. */
 .booth-window{
-  width:100%;
-  min-height:120px;
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:10px;
-  background:#060606;
+  position:relative;
+  align-self:flex-start;
+  width:auto;
+  max-width:78%;
+  min-height:44px;
+  box-sizing:border-box;
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:18px 18px 18px 4px;
+  background:#161616;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:28px 26px;
-  margin-bottom:20px;
+  padding:16px 20px;
+  margin-bottom:0;
+}
+.booth-window::after{
+  content:"";
+  position:absolute;
+  left:14px;
+  bottom:-8px;
+  width:16px;
+  height:16px;
+  background:#161616;
+  border-left:1px solid rgba(255,255,255,0.14);
+  border-bottom:1px solid rgba(255,255,255,0.14);
+  border-bottom-left-radius:3px;
+  transform:rotate(-45deg);
 }
 .booth-placeholder{
   color:var(--silver-dim);
