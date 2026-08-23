@@ -331,6 +331,175 @@ body{
   opacity:0.75;
 }
 
+/* THE BOOTH — a small text oracle. Reuses the votive form's input/button
+   language (dark field, gold outline) and the prayer card's serif-italic
+   voice for the answer text, so it reads as part of the same site rather
+   than a bolted-on widget. */
+.booth-section{
+  max-width:640px;
+  margin:0 auto;
+  padding:60px 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.booth-intro{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:15px;
+  color:var(--silver-dim);
+  text-align:center;
+  margin-bottom:32px;
+}
+.booth-card{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.booth-sign{
+  width:100%;
+  max-width:300px;
+  height:auto;
+  color:var(--silver-dim);
+  margin-bottom:20px;
+}
+.booth-sign-title{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.14em;
+  fill:var(--silver-dim);
+}
+.booth-sign-price{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:600;
+  font-size:24px;
+  fill:var(--gold);
+}
+.booth-sign-sub{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;
+  letter-spacing:0.08em;
+  fill:var(--silver-dim);
+  opacity:0.75;
+}
+.booth-window{
+  width:100%;
+  min-height:120px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  background:#060606;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 26px;
+  margin-bottom:20px;
+}
+.booth-placeholder{
+  color:var(--silver-dim);
+  opacity:0.5;
+}
+.booth-thinking{
+  animation:booth-pulse 1.4s ease-in-out infinite;
+}
+@keyframes booth-pulse{
+  0%,100%{opacity:0.25;}
+  50%{opacity:0.65;}
+}
+.booth-answer{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:19px;
+  line-height:1.55;
+  color:var(--silver);
+  text-align:center;
+  white-space:pre-line;
+}
+.booth-form{
+  width:100%;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.booth-input{
+  flex:1;
+  background:#060606;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  padding:12px 16px;
+  color:#DDDDDD;
+  font-size:14px;
+  font-family:inherit;
+  letter-spacing:0.02em;
+}
+.booth-input::placeholder{color:#666666;}
+.booth-input:focus{outline:none;border-color:var(--gold);}
+.booth-submit{
+  background:transparent;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  border-radius:10px;
+  padding:12px 22px;
+  font-size:12px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background 0.2s ease, color 0.2s ease;
+  font-family:'IBM Plex Mono',monospace;
+}
+.booth-submit:hover{background:var(--gold);color:#060606;}
+.booth-submit:disabled{opacity:0.5;cursor:default;}
+.booth-error{
+  margin-top:12px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--accent);
+  text-align:center;
+}
+.booth-footer-row{
+  margin-top:18px;
+}
+.booth-signin{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.booth-passcode-input{
+  background:#060606;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px;
+  padding:8px 12px;
+  color:#DDDDDD;
+  font-size:12px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.booth-passcode-input::placeholder{color:#666666;}
+.booth-passcode-input:focus{outline:none;border-color:var(--gold);}
+.booth-signin-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.06em;
+  color:var(--silver-dim);
+  background:none;
+  border:none;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.booth-signin-btn:disabled{opacity:0.5;cursor:default;}
+.booth-disclosure{
+  margin-top:24px;
+  max-width:480px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:0.03em;
+  line-height:1.5;
+  color:var(--silver-dim);
+  text-align:center;
+  opacity:0.85;
+}
+
 /* Prayer and Meditation */
 .prayer-section{
   padding:70px 0 20px;

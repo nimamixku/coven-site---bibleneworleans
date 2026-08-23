@@ -843,6 +843,207 @@ function SiteCursor() {
   );
 }
 
+// ---- THE BOOTH ----
+// A small text oracle, in the spirit of the classic "psychiatric help,
+// 5 cents" booth gag -- but instead of a person behind the window,
+// there's just a blank space where an answer appears, generated in the
+// site's own voice (see app/api/booth/route.js for the actual grounding
+// and the hard safety boundary around real distress). Owner-only to
+// trigger for now -- everyone can see the booth itself and read past
+// answers count toward showcasing the feature, but only the signed-in
+// keeper can actually ask it something, so real API cost stays bounded
+// to testing. Opening it to visitors later is a server-side change only
+// (see the route file) -- nothing here in the UI needs to change.
+// The booth's own illustrated sign -- an original line-art piece in the
+// site's existing gold/silver aesthetic (not a copy of the Peanuts booth
+// art), showing the REAL dollar cost of the last reading instead of a
+// joke "5 cents". Before any question's been asked it just shows a dash.
+function BoothSignGraphic({ price, asking }) {
+  const priceLabel =
+    price == null ? "— . — — — —" : `$${price.toFixed(4)}`;
+  return (
+    <svg
+      className="booth-sign"
+      viewBox="0 0 220 116"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect
+        x="1"
+        y="1"
+        width="218"
+        height="114"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+      <line x1="1" y1="40" x2="219" y2="40" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+      <line x1="1" y1="86" x2="219" y2="86" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+      <text x="110" y="26" textAnchor="middle" className="booth-sign-title">
+        BOOTH HELP
+      </text>
+      <text x="110" y="70" textAnchor="middle" className="booth-sign-price">
+        {priceLabel}
+      </text>
+      <text x="110" y="102" textAnchor="middle" className="booth-sign-sub">
+        {asking ? "reading…" : "the booth is in"}
+      </text>
+    </svg>
+  );
+}
+
+function BoothSignIn({ isOwner, onChange }) {
+  const [passcode, setPasscode] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (isOwner) {
+    return (
+      <button
+        type="button"
+        className="link-btn booth-signin-btn"
+        onClick={() => {
+          fetch("/api/owner", { method: "DELETE" }).then(() => onChange(false));
+        }}
+      >
+        signed in as keeper — sign out
+      </button>
+    );
+  }
+
+  return (
+    <form
+      className="booth-signin"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!passcode.trim()) return;
+        setBusy(true);
+        setError("");
+        fetch("/api/owner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ passcode }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            if (d?.ok) {
+              onChange(true);
+              setPasscode("");
+            } else {
+              setError(d?.error || "that passcode isn't right.");
+            }
+          })
+          .catch(() => setError("something went wrong."))
+          .finally(() => setBusy(false));
+      }}
+    >
+      <input
+        type="password"
+        className="booth-passcode-input"
+        placeholder="keeper passcode"
+        value={passcode}
+        onChange={(e) => setPasscode(e.target.value)}
+      />
+      <button type="submit" className="link-btn booth-signin-btn" disabled={busy}>
+        {busy ? "signing in…" : "sign in as keeper"}
+      </button>
+      {error && <div className="booth-error">{error}</div>}
+    </form>
+  );
+}
+
+function Booth() {
+  const [isOwner, setIsOwner] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [entry, setEntry] = useState(null);
+  const [asking, setAsking] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/owner")
+      .then((r) => r.json())
+      .then((d) => setIsOwner(!!d.isOwner))
+      .catch(() => {});
+  }, []);
+
+  function handleAsk(e) {
+    e.preventDefault();
+    const text = question.trim();
+    if (!text || asking) return;
+    setAsking(true);
+    setError("");
+    fetch("/api/booth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: text }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.entry) {
+          setEntry(d.entry);
+          setQuestion("");
+        } else {
+          setError(d?.error || "something went wrong.");
+        }
+      })
+      .catch(() => setError("something went wrong."))
+      .finally(() => setAsking(false));
+  }
+
+  return (
+    <section className="booth-section">
+      <h2 className="section-heading">THE BOOTH</h2>
+      <p className="booth-intro">
+        ask it a question. bring a thought, a feeling — whatever's loudest right now.
+      </p>
+
+      <div className="booth-card">
+        <BoothSignGraphic price={entry?.costUsd} asking={asking} />
+
+        <div className="booth-window">
+          {asking ? (
+            <div className="booth-placeholder booth-thinking">
+              <LineCross size={28} />
+            </div>
+          ) : entry ? (
+            <p className="booth-answer">{entry.answer}</p>
+          ) : (
+            <div className="booth-placeholder">
+              <LineCross size={28} />
+            </div>
+          )}
+        </div>
+
+        <form className="booth-form" onSubmit={handleAsk}>
+          <input
+            type="text"
+            className="booth-input"
+            placeholder="ask the booth…"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            maxLength={500}
+          />
+          <button className="booth-submit" type="submit" disabled={asking}>
+            {asking ? "…" : "ask"}
+          </button>
+        </form>
+
+        {error && <div className="booth-error">{error}</div>}
+
+        <div className="booth-footer-row">
+          <BoothSignIn isOwner={isOwner} onChange={setIsOwner} />
+        </div>
+      </div>
+
+      <p className="booth-disclosure">
+        every answer here is machine-generated by Claude (Anthropic), grounded in
+        COVEN of New Orleans's own published writing — no human reads or replies
+        in real time.
+      </p>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
     <div className="page">
@@ -973,6 +1174,10 @@ export default function Home() {
       <div className="section-divider"></div>
 
       <OuiOuiBoard />
+
+      <div className="section-divider"></div>
+
+      <Booth />
 
       <div className="section-divider"></div>
 
